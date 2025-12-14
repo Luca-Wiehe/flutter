@@ -1114,5 +1114,25 @@
   "themeMode": "Theme mode",
   "darkMode": "Always dark mode",
   "lightMode": "Always light mode",
-  "systemMode": "System settings"
+  "systemMode": "System settings",
+  "onlineModeTitle": "With Account",
+  "@onlineModeTitle": {
+    "description": "Title for the online/account-based mode section on the auth screen"
+  },
+  "onlineModeDescription": "Sync your data across devices. Search for ingredients online.",
+  "@onlineModeDescription": {
+    "description": "Brief description of benefits when using the app with an account"
+  },
+  "offlineModeTitle": "Without Account",
+  "@offlineModeTitle": {
+    "description": "Title for the offline/guest mode section on the auth screen"
+  },
+  "offlineModeDescription": "All data stays on your device. Ingredient search requires internet.",
+  "@offlineModeDescription": {
+    "description": "Brief description explaining offline mode limitations"
+  },
+  "continueWithoutAccount": "Continue without account",
+  "@continueWithoutAccount": {
+    "description": "Button text to start using the app in offline mode without creating an account"
+  }
 }

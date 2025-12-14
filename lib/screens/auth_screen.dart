@@ -45,55 +45,167 @@ class AuthScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final deviceSize = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            left: 0,
-            child: Container(
-              height: 0.55 * deviceSize.height,
-              color: wgerPrimaryColor,
-            ),
-          ),
-          SingleChildScrollView(
-            child: SizedBox(
-              height: deviceSize.height,
-              width: deviceSize.width,
+      body: const SafeArea(
+        child: AuthScreenContent(),
+      ),
+    );
+  }
+}
+
+class AuthScreenContent extends StatelessWidget {
+  const AuthScreenContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final deviceSize = MediaQuery.sizeOf(context);
+    final i18n = AppLocalizations.of(context);
+
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: deviceSize.height - MediaQuery.of(context).padding.top,
+        ),
+        child: Column(
+          children: [
+            // Top section: Logo and Online Mode (Login/Register)
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: wgerPrimaryColor,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: 0.15 * deviceSize.height),
+                  SizedBox(height: deviceSize.height * 0.04),
+                  // Logo
                   const Image(
                     image: AssetImage('assets/images/logo-white.png'),
-                    width: 85,
+                    width: 70,
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 20.0),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: 94.0,
+                  const SizedBox(height: 8),
+                  const Text(
+                    'wger',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: const Text(
-                      'wger',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  SizedBox(height: deviceSize.height * 0.02),
+                  // Online Mode Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Card(
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.cloud_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  i18n.onlineModeTitle,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                i18n.onlineModeDescription,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const AuthCard(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 0.025 * deviceSize.height),
-                  const Flexible(child: AuthCard()),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // Bottom section: Offline Mode
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.smartphone_outlined,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        i18n.offlineModeTitle,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      i18n.offlineModeDescription,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      key: const Key('offlineModeButton'),
+                      icon: const Icon(Icons.arrow_forward),
+                      label: Text(i18n.continueWithoutAccount),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () {
+                        context.read<AuthProvider>().enterOfflineMode();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -182,11 +294,11 @@ class _AuthCardState extends State<AuthCard> {
       late LoginActions res;
       if (_authMode == AuthMode.Login) {
         res = await context.read<AuthProvider>().login(
-          _authData['username']!,
-          _authData['password']!,
-          _authData['serverUrl']!,
-          _authData['apiToken'],
-        );
+              _authData['username']!,
+              _authData['password']!,
+              _authData['serverUrl']!,
+              _authData['apiToken'],
+            );
 
         // Register new user
       } else {
@@ -242,188 +354,175 @@ class _AuthCardState extends State<AuthCard> {
   @override
   Widget build(BuildContext context) {
     final i18n = AppLocalizations.of(context);
-    final deviceSize = MediaQuery.sizeOf(context);
 
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      elevation: 8.0,
-      child: Container(
-        width: deviceSize.width * 0.9,
-        padding: EdgeInsets.symmetric(
-          horizontal: 15.0,
-          vertical: 0.025 * deviceSize.height,
-        ),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: AutofillGroup(
-              child: Column(
-                children: [
-                  errorMessage,
-                  if (_useUsernameAndPassword)
-                    UsernameField(
-                      controller: _apiTokenController,
-                      onSaved: (value) => _authData['username'] = value!,
-                    ),
-                  if (_authMode == AuthMode.Register)
-                    EmailField(
-                      controller: _emailController,
-                      onSaved: (value) => _authData['email'] = value!,
-                    ),
-                  if (_useUsernameAndPassword)
-                    PasswordField(
-                      controller: _passwordController,
-                      onSaved: (value) => _authData['password'] = value!,
-                    ),
+    return Form(
+      key: _formKey,
+      child: AutofillGroup(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            errorMessage,
+            if (_useUsernameAndPassword)
+              UsernameField(
+                controller: _apiTokenController,
+                onSaved: (value) => _authData['username'] = value!,
+              ),
+            if (_authMode == AuthMode.Register)
+              EmailField(
+                controller: _emailController,
+                onSaved: (value) => _authData['email'] = value!,
+              ),
+            if (_useUsernameAndPassword)
+              PasswordField(
+                controller: _passwordController,
+                onSaved: (value) => _authData['password'] = value!,
+              ),
 
-                  if (_authMode == AuthMode.Register)
-                    StatefulBuilder(
-                      builder: (context, updateState) {
-                        return TextFormField(
-                          key: const Key('inputPassword2'),
-                          decoration: InputDecoration(
-                            labelText: i18n.confirmPassword,
-                            prefixIcon: const Icon(Icons.password),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                confirmIsObscure ? Icons.visibility_off : Icons.visibility,
-                              ),
-                              onPressed: () {
-                                updateState(() {
-                                  confirmIsObscure = !confirmIsObscure;
-                                });
-                              },
-                            ),
-                          ),
-                          controller: _password2Controller,
-                          enabled: _authMode == AuthMode.Register,
-                          obscureText: confirmIsObscure,
-                          validator: _authMode == AuthMode.Register
-                              ? (value) {
-                                  if (value != _passwordController.text) {
-                                    return i18n.passwordsDontMatch;
-                                  }
-                                  return null;
-                                }
-                              : null,
-                        );
-                      },
-                    ),
-
-                  // Off-stage widgets are kept in the tree, otherwise the server URL
-                  // would not be saved to _authData
-                  if (_authMode == AuthMode.Login && !_useUsernameAndPassword)
-                    ApiTokenField(
-                      controller: _apiTokenController,
-                      onSaved: (value) => _authData['apiToken'] = value!,
-                    ),
-                  Offstage(
-                    offstage: _hideCustomServer,
-                    child: ServerField(
-                      controller: _serverUrlController,
-                      onSaved: (value) {
-                        // Remove any trailing slash
-                        if (value!.lastIndexOf('/') == (value.length - 1)) {
-                          value = value.substring(0, value.lastIndexOf('/'));
-                        }
-                        _authData['serverUrl'] = value;
-                      },
-                    ),
-                  ),
-                  if (!_hideCustomServer)
-                    TextButton(
-                      key: const ValueKey('toggleApiTokenButton'),
-                      onPressed: _authMode == AuthMode.Login
-                          ? () => setState(() => _useUsernameAndPassword = !_useUsernameAndPassword)
-                          : null,
-                      child: Text(
-                        _useUsernameAndPassword ? i18n.useApiToken : i18n.useUsernameAndPassword,
-                      ),
-                    ),
-
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ElevatedButton(
-                      key: const Key('actionButton'),
-                      onPressed: () {
-                        if (!_isLoading) {
-                          return _submit(context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            )
-                          : Text(
-                              _authMode == AuthMode.Login ? i18n.login : i18n.register,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                  Builder(
-                    key: const Key('toggleActionButton'),
-                    builder: (context) {
-                      final String text = _authMode != AuthMode.Register
-                          ? i18n.registerInstead
-                          : i18n.loginInstead;
-
-                      return GestureDetector(
-                        onTap: () => _switchAuthMode(),
-                        child: Container(
-                          color: Colors.transparent,
-                          child: Column(
-                            children: [
-                              // TODO: i18n!
-                              Text(
-                                text.substring(0, text.lastIndexOf('?') + 1),
-                              ),
-                              Text(
-                                text.substring(
-                                  text.lastIndexOf('?') + 1,
-                                  text.length,
-                                ),
-                                style: const TextStyle(
-                                  //color: wgerPrimaryColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
+            if (_authMode == AuthMode.Register)
+              StatefulBuilder(
+                builder: (context, updateState) {
+                  return TextFormField(
+                    key: const Key('inputPassword2'),
+                    decoration: InputDecoration(
+                      labelText: i18n.confirmPassword,
+                      prefixIcon: const Icon(Icons.password),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          confirmIsObscure ? Icons.visibility_off : Icons.visibility,
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  TextButton(
-                    key: const Key('toggleCustomServerButton'),
-                    onPressed: () {
-                      setState(() {
-                        _hideCustomServer = !_hideCustomServer;
-                        if (_hideCustomServer) {
-                          _useUsernameAndPassword = true;
-                        }
-                      });
-                    },
-                    child: Text(
-                      _hideCustomServer ? i18n.useCustomServer : i18n.useDefaultServer,
+                        onPressed: () {
+                          updateState(() {
+                            confirmIsObscure = !confirmIsObscure;
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                    controller: _password2Controller,
+                    enabled: _authMode == AuthMode.Register,
+                    obscureText: confirmIsObscure,
+                    validator: _authMode == AuthMode.Register
+                        ? (value) {
+                            if (value != _passwordController.text) {
+                              return i18n.passwordsDontMatch;
+                            }
+                            return null;
+                          }
+                        : null,
+                  );
+                },
+              ),
+
+            // Off-stage widgets are kept in the tree, otherwise the server URL
+            // would not be saved to _authData
+            if (_authMode == AuthMode.Login && !_useUsernameAndPassword)
+              ApiTokenField(
+                controller: _apiTokenController,
+                onSaved: (value) => _authData['apiToken'] = value!,
+              ),
+            Offstage(
+              offstage: _hideCustomServer,
+              child: ServerField(
+                controller: _serverUrlController,
+                onSaved: (value) {
+                  // Remove any trailing slash
+                  if (value!.lastIndexOf('/') == (value.length - 1)) {
+                    value = value.substring(0, value.lastIndexOf('/'));
+                  }
+                  _authData['serverUrl'] = value;
+                },
               ),
             ),
-          ),
+            if (!_hideCustomServer)
+              TextButton(
+                key: const ValueKey('toggleApiTokenButton'),
+                onPressed: _authMode == AuthMode.Login
+                    ? () => setState(() => _useUsernameAndPassword = !_useUsernameAndPassword)
+                    : null,
+                child: Text(
+                  _useUsernameAndPassword ? i18n.useApiToken : i18n.useUsernameAndPassword,
+                ),
+              ),
+
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                key: const Key('actionButton'),
+                onPressed: () {
+                  if (!_isLoading) {
+                    return _submit(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      )
+                    : Text(
+                        _authMode == AuthMode.Login ? i18n.login : i18n.register,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+            Builder(
+              key: const Key('toggleActionButton'),
+              builder: (context) {
+                final String text =
+                    _authMode != AuthMode.Register ? i18n.registerInstead : i18n.loginInstead;
+
+                return GestureDetector(
+                  onTap: () => _switchAuthMode(),
+                  child: Container(
+                    color: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      children: [
+                        Text(
+                          text.substring(0, text.lastIndexOf('?') + 1),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          text.substring(
+                            text.lastIndexOf('?') + 1,
+                            text.length,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            TextButton(
+              key: const Key('toggleCustomServerButton'),
+              onPressed: () {
+                setState(() {
+                  _hideCustomServer = !_hideCustomServer;
+                  if (_hideCustomServer) {
+                    _useUsernameAndPassword = true;
+                  }
+                });
+              },
+              child: Text(
+                _hideCustomServer ? i18n.useCustomServer : i18n.useDefaultServer,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -42,6 +42,7 @@ enum AuthState {
   updateRequired,
   loggedIn,
   loggedOut,
+  offlineMode,
 }
 
 class AuthProvider with ChangeNotifier {
@@ -69,8 +70,13 @@ class AuthProvider with ChangeNotifier {
   /// flag to indicate that the application has successfully loaded all initial data
   bool dataInit = false;
 
+  /// flag to indicate whether the app is running in offline mode
+  bool _isOfflineMode = false;
+
+  bool get isOfflineMode => _isOfflineMode;
+
   bool get isAuth {
-    return token != null;
+    return token != null || _isOfflineMode;
   }
 
   /// Server application version
@@ -219,9 +225,16 @@ class AuthProvider with ChangeNotifier {
     return userData['serverUrl'] as String;
   }
 
-  /// Tries to auto-login the user with the stored token
+  /// Tries to auto-login the user with the stored token or restore offline mode
   Future<void> tryAutoLogin() async {
     final prefs = PreferenceHelper.asyncPref;
+
+    // Check for offline mode first
+    if (await checkOfflineMode()) {
+      _logger.info('Restored offline mode, skipping online auto-login');
+      return;
+    }
+
     if (!(await prefs.containsKey(PREFS_USER))) {
       _logger.info('autologin failed, no saved user data');
       state = AuthState.loggedOut;
@@ -278,6 +291,7 @@ class AuthProvider with ChangeNotifier {
     token = null;
     serverUrl = null;
     dataInit = false;
+    _isOfflineMode = false;
     state = AuthState.loggedOut;
 
     if (shouldNotify) {
@@ -286,6 +300,39 @@ class AuthProvider with ChangeNotifier {
 
     final prefs = PreferenceHelper.asyncPref;
     prefs.remove(PREFS_USER);
+    prefs.remove(PREFS_OFFLINE_MODE);
+  }
+
+  /// Enter offline mode without authentication
+  ///
+  /// This allows users to use the app without creating an account.
+  /// All data will be stored locally on the device.
+  Future<void> enterOfflineMode() async {
+    _logger.info('Entering offline mode');
+    _isOfflineMode = true;
+    token = null;
+    serverUrl = null;
+    state = AuthState.offlineMode;
+
+    final prefs = PreferenceHelper.asyncPref;
+    await prefs.setBool(PREFS_OFFLINE_MODE, true);
+
+    notifyListeners();
+  }
+
+  /// Check if offline mode was previously selected and restore it
+  Future<bool> checkOfflineMode() async {
+    final prefs = PreferenceHelper.asyncPref;
+    final isOffline = await prefs.getBool(PREFS_OFFLINE_MODE) ?? false;
+
+    if (isOffline) {
+      _logger.info('Restoring offline mode from preferences');
+      _isOfflineMode = true;
+      state = AuthState.offlineMode;
+      notifyListeners();
+    }
+
+    return isOffline;
   }
 
   /// Returns the application name and version

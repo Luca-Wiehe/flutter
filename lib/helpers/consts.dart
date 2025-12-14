@@ -59,6 +59,15 @@ const PREFS_USER = 'userData';
 const PREFS_USER_DARK_THEME = 'userDarkMode';
 const PREFS_LAST_SERVER = 'lastServer';
 
+/// Offline mode preferences
+const PREFS_OFFLINE_MODE = 'offlineMode';
+const PREFS_OFFLINE_DATA_VERSION = 'offlineDataVersion';
+const PREFS_OFFLINE_DATA_DOWNLOADED = 'offlineDataDownloaded';
+const PREFS_OFFLINE_LAST_SYNC = 'offlineLastSync';
+
+/// Date used for "permanent" cache entries that should never expire
+final CACHE_NEVER_EXPIRES = DateTime(9999, 12, 31);
+
 const DEFAULT_ANIMATION_DURATION = Duration(milliseconds: 200);
 const DEFAULT_ANIMATION_CURVE = Curves.bounceIn;
 

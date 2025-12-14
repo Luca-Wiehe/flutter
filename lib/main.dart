@@ -138,16 +138,17 @@ class MainApp extends StatelessWidget {
   Widget _getHomeScreen(AuthProvider auth) {
     switch (auth.state) {
       case AuthState.loggedIn:
+      case AuthState.offlineMode:
         return HomeTabsScreen();
       case AuthState.updateRequired:
         return const UpdateAppScreen();
-      default:
+      case AuthState.loggedOut:
         return FutureBuilder(
           future: auth.tryAutoLogin(),
           builder: (ctx, authResultSnapshot) =>
               authResultSnapshot.connectionState == ConnectionState.waiting
-              ? const SplashScreen()
-              : const AuthScreen(),
+                  ? const SplashScreen()
+                  : const AuthScreen(),
         );
     }
   }

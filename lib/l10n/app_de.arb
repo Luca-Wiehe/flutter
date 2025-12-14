@@ -1127,5 +1127,15 @@
     "endWorkout": "Training beenden",
     "@endWorkout": {},
     "dayTypeCustom": "personalisierte",
-    "@dayTypeCustom": {}
+    "@dayTypeCustom": {},
+    "onlineModeTitle": "Mit Konto",
+    "@onlineModeTitle": {},
+    "onlineModeDescription": "Synchronisiere deine Daten zwischen Geräten. Suche Zutaten online.",
+    "@onlineModeDescription": {},
+    "offlineModeTitle": "Ohne Konto",
+    "@offlineModeTitle": {},
+    "offlineModeDescription": "Alle Daten bleiben auf deinem Gerät. Zutatensuche benötigt Internet.",
+    "@offlineModeDescription": {},
+    "continueWithoutAccount": "Ohne Konto fortfahren",
+    "@continueWithoutAccount": {}
 }
